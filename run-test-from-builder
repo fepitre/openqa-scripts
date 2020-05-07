@@ -12,7 +12,7 @@ shift 5
 
 exit_clean() {
     local exit_code=$?
-    rm -rf "$tmpdir"
+    rm -rf "$builddir"
     exit "${exit_code}"
 }
 
@@ -22,15 +22,15 @@ exit_clean() {
 
 trap 'exit_clean' 0 1 2 3 6 15
 
-tmpdir="$(mktemp -d -p "$localdir")"
-mkdir -p "$tmpdir/dom0/rpm"
-find "$builder/qubes-src/linux-yum/r$rel"/templates-*-testing -name '*.rpm' -exec cp -t "$tmpdir/dom0/rpm" {} +
+builddir="$localdir/$build"
+mkdir -p "$builddir/dom0/rpm"
+find "$builder/qubes-src/linux-yum/r$rel"/templates-*-testing -name '*.rpm' -exec cp -t "$builddir/dom0/rpm" {} +
 
-"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/dom0" "$tmpdir"
-"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/vm" "$tmpdir"
-"$localdir/create-test-repo" "$builder/qubes-src/linux-deb/r$rel/vm" "$tmpdir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/dom0" "$builddir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/vm" "$builddir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-deb/r$rel/vm" "$builddir"
 
-rsync -av --progress "$tmpdir" "$host:/var/lib/openqa/factory/repo/$build"
+rsync -av --progress "$builddir/" "$host:/var/lib/openqa/factory/repo/$build"
 
 # mitigate clock skew on whonix...
 sleep 60
