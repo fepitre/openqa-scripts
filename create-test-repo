@@ -1,12 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 # vim: set ts=4 et sw=4
 
 indir="$1"
 outdir="$2"
 
-DISTS_VM_DEBIAN="jessie stretch buster"
-DISTS_VM_FEDORA="fc26 fc27 fc28 fc29 fc30"
-if echo "$indir" | fgrep -q '4.1'; then
+DISTS_VM_DEBIAN="jessie stretch buster bullseye"
+DISTS_VM_FEDORA="fc30 fc31 fc32"
+if echo "$indir" | grep −F -q '4.1'; then
 DIST_DOM0="fc31"
 else
 DIST_DOM0="fc25"
@@ -26,19 +26,20 @@ handle_rpm_repo() {
     createrepo_c --update "$dir"
 }
 
-function calc_sha1() {
+calc_sha1() {
     local f=$1
     echo -n " "
-    echo -n $(sha1sum $f|cut -d' ' -f 1) ""
-    echo -n $(stat -c %s $f) ""
-    echo $1
+    echo -n "$(sha1sum "$f"|cut -d' ' -f 1)" ""
+    echo -n "$(stat -c %s "$f")" ""
+    echo "$1"
 }
-function calc_sha256() {
+
+calc_sha256() {
     local f=$1
     echo -n " "
-    echo -n $(sha256sum $f|cut -d' ' -f 1) ""
-    echo -n $(stat -c %s $f) ""
-    echo $1
+    echo -n "$(sha256sum "$f"|cut -d' ' -f 1)" ""
+    echo -n "$(stat -c %s "$f")" ""
+    echo "$1"
 }
 
 handle_deb_repo() {
@@ -46,33 +47,38 @@ handle_deb_repo() {
 	local DIST="$2"
 	local DIST_TAG=$3
 
-	pushd $dir
-	mkdir -p dists/$DIST/main/binary-amd64
-	dpkg-scanpackages --multiversion --arch ".*$DIST_TAG.*" . > dists/$DIST/main/binary-amd64/Packages
-	gzip -9c dists/$DIST/main/binary-amd64/Packages > dists/$DIST/main/binary-amd64/Packages.gz
-	cat > dists/$DIST/Release <<EOF
+	pushd "$dir"
+	mkdir -p "dists/$DIST/main/binary-amd64"
+	dpkg-scanpackages --multiversion --arch ".*$DIST_TAG.*" . > "dists/$DIST/main/binary-amd64/Packages"
+	gzip -9c "dists/$DIST/main/binary-amd64/Packages" > "dists/$DIST/main/binary-amd64/Packages.gz"
+	cat > "dists/$DIST/Release" <<EOF
 Label: Test repo
 Suite: $DIST
 Codename: $DIST
-Date: `date -u +"%a, %d %b %Y %H:%M:%S %Z"`
+Date: $(date -u +"%a, %d %b %Y %H:%M:%S %Z")
 Architectures: amd64
 Components: main
 SHA1:
 EOF
-	(cd dists/$DIST; calc_sha1 main/binary-amd64/Packages) >> dists/$DIST/Release
-	echo "SHA256:" >> dists/$DIST/Release
-	(cd dists/$DIST; calc_sha256 main/binary-amd64/Packages) >> dists/$DIST/Release
+	pushd "dists/$DIST"
+    calc_sha1 main/binary-amd64/Packages >> "dists/$DIST/Release"
+    popd
 
-	rm -f dists/$DIST/Release.gpg
-	rm -f dists/$DIST/InRelease
+	echo "SHA256:" >> "dists/$DIST/Release"
+    pushd "dists/$DIST"
+    calc_sha256 main/binary-amd64/Packages >> "dists/$DIST/Release"
+    popd
+
+	rm -f "dists/$DIST/Release.gpg"
+	rm -f "dists/$DIST/InRelease"
 	gpg --digest-algo=SHA256 -abs -u "TEST" \
-		< dists/$DIST/Release > dists/$DIST/Release.gpg
+		< "dists/$DIST/Release" > "dists/$DIST/Release.gpg"
 	gpg --digest-algo=SHA256 -a -s --clearsign -u "TEST" \
-		< dists/$DIST/Release > dists/$DIST/InRelease
+		< "dists/$DIST/Release" > "dists/$DIST/InRelease"
 	popd
 
-	if [ `id -u` -eq 0 ]; then
-		chown -R --reference=$dir $dir
+	if [ "$(id -u)" -eq 0 ]; then
+		chown -R --reference="$dir" "$dir"
 	fi
 }
 
@@ -88,14 +94,14 @@ done
 
 for dist in $DISTS_VM_DEBIAN; do
     mkdir -p "$outdir/vm/pool"
-    if [ "$dist" = "wheezy" ]; then
-        dist_tag=deb7
-    elif [ "$dist" = "jessie" ]; then
+    if [ "$dist" = "jessie" ]; then
         dist_tag=deb8
     elif [ "$dist" = "stretch" ]; then
         dist_tag=deb9
     elif [ "$dist" = "buster" ]; then
         dist_tag=deb10
+    elif [ "$dist" = "bullseye" ]; then
+        dist_tag=deb11
     fi
     if [ -d "$indir" ]; then
         find "$indir" -name "*${dist_tag}*.deb" -exec cp -t "$outdir/vm/pool" {} +
