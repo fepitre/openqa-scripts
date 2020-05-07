@@ -14,7 +14,7 @@ shift 5
 [ -d "$builder/qubes-src/linux-yum/r$rel" ] || exit 1
 [ -n "$build" ] || exit 1
 
-tmpdir="$(mktemp -d)"
+tmpdir="$(mktemp -d -p "$localdir")"
 mkdir -p "$tmpdir/dom0/rpm"
 find "$builder/qubes-src/linux-yum/r$rel"/templates-*-testing -name '*.rpm' -exec cp -t "$tmpdir/dom0/rpm" {} +
 

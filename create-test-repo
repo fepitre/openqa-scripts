@@ -3,7 +3,7 @@
 
 indir="$1"
 outdir="$2"
-keyid="${3:-TEST}"
+keyid="$3"
 
 DISTS_VM_DEBIAN="jessie stretch buster bullseye"
 DISTS_VM_FEDORA="fc30 fc31 fc32"
@@ -20,6 +20,15 @@ set -x
 [ -n "$indir" ]
 [ -d "$indir" ]
 [ -n "$outdir" ]
+
+if [ -z "$keyid" ]; then
+    keyid_from_rpm="$(rpm --eval %_gpg_name)"
+    if [ -n "$keyid_from_rpm" ]; then
+        keyid="$keyid_from_rpm"
+    else
+        keyid=TEST
+    fi
+fi
 
 handle_rpm_repo() {
     local dir="$1"
