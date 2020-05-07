@@ -10,9 +10,17 @@ flavor=${4:-pull-requests}
 host=${5:-openqa.qubes-os.org}
 shift 5
 
+exit_clean() {
+    local exit_code=$?
+    rm -rf "$tmpdir"
+    exit "${exit_code}"
+}
+
 [ -d "$builder" ] || exit 1
 [ -d "$builder/qubes-src/linux-yum/r$rel" ] || exit 1
 [ -n "$build" ] || exit 1
+
+trap 'exit_clean' 0 1 2 3 6 15
 
 tmpdir="$(mktemp -d -p "$localdir")"
 mkdir -p "$tmpdir/dom0/rpm"
