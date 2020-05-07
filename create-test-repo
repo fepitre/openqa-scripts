@@ -8,7 +8,7 @@ keyid="${3:-TEST}"
 DISTS_VM_DEBIAN="jessie stretch buster bullseye"
 DISTS_VM_FEDORA="fc30 fc31 fc32"
 if echo "$indir" | grep -q -F '4.1'; then
-DIST_DOM0="fc31"
+DIST_DOM0="fc32"
 else
 DIST_DOM0="fc25"
 fi
