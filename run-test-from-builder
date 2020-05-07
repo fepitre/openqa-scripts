@@ -1,34 +1,34 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e -x
 
+localdir="$(readlink -f "$(dirname "$0")")"
 builder=$1
 rel=$2
 build=$3
+flavor=$4
 outdir=/var/lib/openqa/factory/repo/$build
-shift 3
+shift 4
 
-set -x
 [ -d "$builder" ] || exit 1
 [ -d "$builder/qubes-src/linux-yum/r$rel" ] || exit 1
 [ -n "$build" ] || exit 1
 
 mkdir -p "$outdir/dom0/rpm"
 find "$builder/qubes-src/linux-yum/r$rel"/templates-*-testing -name '*.rpm' -exec cp -t "$outdir/dom0/rpm" {} +
-create-test-repo "$builder/qubes-src/linux-yum/r$rel/unstable/dom0" "$outdir"
-create-test-repo "$builder/qubes-src/linux-yum/r$rel/unstable/vm" "$outdir"
-create-test-repo "$builder/qubes-src/linux-deb/r$rel/vm" "$outdir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/dom0" "$outdir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-yum/r$rel/unstable/vm" "$outdir"
+"$localdir/create-test-repo" "$builder/qubes-src/linux-deb/r$rel/vm" "$outdir"
 
 # mitigate clock skew on whonix...
 sleep 60
 
 openqa-client --host https://openqa.qubes-os.org isos post \
     DISTRI=qubesos \
-    VERSION=$rel \
-    FLAVOR=pull-requests \
+    VERSION="$rel" \
+    FLAVOR="$flavor" \
     ARCH=x86_64 \
-    BUILD=$build-$rel \
-    REPO_1=$build \
+    BUILD="$build-$rel" \
+    REPO_1="$build" \
     UPDATE=1 \
     "$@"
-#    UEFI_DIRECT=1 \
