@@ -7,7 +7,7 @@ keyid="${3:-TEST}"
 
 DISTS_VM_DEBIAN="jessie stretch buster bullseye"
 DISTS_VM_FEDORA="fc30 fc31 fc32"
-if echo "$indir" | grep −F -q '4.1'; then
+if echo "$indir" | grep -q -F '4.1'; then
 DIST_DOM0="fc31"
 else
 DIST_DOM0="fc25"
@@ -61,14 +61,9 @@ Architectures: amd64
 Components: main
 SHA1:
 EOF
-	pushd "dists/$DIST"
-    calc_sha1 main/binary-amd64/Packages >> "dists/$DIST/Release"
-    popd
-
+	(cd "dists/$DIST"; calc_sha1 main/binary-amd64/Packages) >> "dists/$DIST/Release"
 	echo "SHA256:" >> "dists/$DIST/Release"
-    pushd "dists/$DIST"
-    calc_sha256 main/binary-amd64/Packages >> "dists/$DIST/Release"
-    popd
+	(cd "dists/$DIST"; calc_sha256 main/binary-amd64/Packages) >> "dists/$DIST/Release"
 
 	rm -f "dists/$DIST/Release.gpg"
 	rm -f "dists/$DIST/InRelease"
