@@ -3,6 +3,7 @@
 
 indir="$1"
 outdir="$2"
+keyid="${3:-TEST}"
 
 DISTS_VM_DEBIAN="jessie stretch buster bullseye"
 DISTS_VM_FEDORA="fc30 fc31 fc32"
@@ -22,7 +23,7 @@ set -x
 
 handle_rpm_repo() {
     local dir="$1"
-    find "$dir" -name '*.rpm' -exec rpmsign --key-id=TEST --addsign {} +
+    find "$dir" -name '*.rpm' -exec rpmsign --key-id="$keyid" --addsign {} +
     createrepo_c --update "$dir"
 }
 
@@ -71,9 +72,9 @@ EOF
 
 	rm -f "dists/$DIST/Release.gpg"
 	rm -f "dists/$DIST/InRelease"
-	gpg --digest-algo=SHA256 -abs -u "TEST" \
+	gpg --digest-algo=SHA256 -abs -u "$keyid" \
 		< "dists/$DIST/Release" > "dists/$DIST/Release.gpg"
-	gpg --digest-algo=SHA256 -a -s --clearsign -u "TEST" \
+	gpg --digest-algo=SHA256 -a -s --clearsign -u "$keyid" \
 		< "dists/$DIST/Release" > "dists/$DIST/InRelease"
 	popd
 
